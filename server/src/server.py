@@ -1,25 +1,22 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-human_value = 0
+# Initial human presence state
+human_state = {"value": 0}
 
+@app.route('/human', methods=['GET'])
+def get_human_state():
+    return jsonify(human_state)
 
-@app.route("/human", methods=["GET", "POST"])
-def human():
-    global human_value
-    if request.method == "GET":
-        return jsonify({"human_value": human_value}), 200
-    elif request.method == "POST":
-        data = request.get_json() or {}
-        human_value = data["human_value"]
-        print(human_value)
-        return (
-            jsonify({"message": "POST request received at /human", "data": data}),
-            200,
-        )
+@app.route('/update', methods=['POST'])
+def update_human_state():
+    data = request.json
+    if 'value' in data and data['value'] in [0, 1]:
+        human_state['value'] = data['value']
+        return jsonify({"message": "State updated", "value": human_state['value']})
+    else:
+        return jsonify({"error": "Invalid value"}), 400
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
-    human_value = 1
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
